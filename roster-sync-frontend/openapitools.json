@@ -1,0 +1,6 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/migrations/genesis/schema.json",
+  "generator-cli": {
+    "version": "7.4.0"
+  }
+}
