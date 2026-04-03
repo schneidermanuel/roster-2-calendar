@@ -30,6 +30,8 @@ artifacts/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
+appsettings.Development.json
+**/.idea/**
 
 # NuGet Packages
 *.nupkg

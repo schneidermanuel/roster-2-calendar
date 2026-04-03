@@ -1,0 +1,7 @@
+﻿services:
+  rostersync.api:
+    image: rostersync.api
+    build:
+      context: .
+      dockerfile: RosterSync.Api/Dockerfile
+

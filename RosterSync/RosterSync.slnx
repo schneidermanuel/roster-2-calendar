@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
+  <Project Path="RosterSync.Api/RosterSync.Api.csproj" />
+  <Project Path="RosterSync.Core/RosterSync.Core.csproj" />
+  <Project Path="RosterSync.Model/RosterSync.Model.csproj" />
+</Solution>

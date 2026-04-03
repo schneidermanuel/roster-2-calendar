@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
+      <PackageReference Include="Google.Apis.Calendar.v3" Version="1.73.0.4073" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\RosterSync.Model\RosterSync.Model.csproj" />
+    </ItemGroup>
+
+</Project>
