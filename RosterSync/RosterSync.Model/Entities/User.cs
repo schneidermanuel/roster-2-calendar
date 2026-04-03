@@ -11,7 +11,6 @@ public class User
     public required string DisplayName { get; set; }
     public DateTime CreatedAt { get; set; }
     public required bool IsActive { get; set; }
-
     public UserToken? Token { get; set; }
     public ICollection<SyncConfig> SyncConfigs { get; set; } = [];
 }

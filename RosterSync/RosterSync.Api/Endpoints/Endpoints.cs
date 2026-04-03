@@ -7,5 +7,5 @@ public class Endpoints
 {
     public static Delegate TestScraper() => async (CancellationToken cancellationToken,
             [FromServices] IRosterScraper scraper, [FromQuery] string url) =>
-        await scraper.ScrapeAsync(url, cancellationToken);
+        Results.Ok(await scraper.ScrapeAsync(url, cancellationToken));
 }

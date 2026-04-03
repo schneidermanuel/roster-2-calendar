@@ -1,3 +1,5 @@
+using RosterSync.Core;
+
 namespace RosterSync.Api.Endpoints;
 
 public static class EndpointExtensions
@@ -6,7 +8,9 @@ public static class EndpointExtensions
     {
         public IEndpointRouteBuilder AddRosterEndpoints()
         {
-            builder.MapGet("/test/scrape", Endpoints.TestScraper());
+            builder.MapGet("/test/scrape", Endpoints.TestScraper())
+                .Produces<IReadOnlyList<RosterEvent>>();
+            
             return builder;
         }
     }
