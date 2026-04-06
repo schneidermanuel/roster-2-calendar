@@ -6,7 +6,7 @@ namespace RosterSync.Core;
 
 public class RosterSyncService(IDbContext db, IRosterScraper scraper)
 {
-    public async Task SyncAsync(SyncConfig config, CancellationToken cancellationToken = default)
+    public async Task SyncAsync(Model.Entities.SyncConfig config, CancellationToken cancellationToken = default)
     {
         var log = new SyncLog
         {

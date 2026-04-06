@@ -7,7 +7,10 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/calendarDto.ts
+model/createSyncConfigDto.ts
 model/models.ts
 model/rosterEvent.ts
+model/syncConfigDto.ts
 param.ts
 variables.ts

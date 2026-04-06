@@ -6,12 +6,24 @@ using RosterSync.Api;
 using RosterSync.Api.Endpoints;
 using RosterSync.Api.Endpoints.Authentication;
 using RosterSync.Api.Endpoints.Authentication.Internals;
+using RosterSync.Api.Endpoints.Calendars;
+using RosterSync.Api.Endpoints.SyncConfigs;
 using RosterSync.Core;
 using RosterSync.Core.Internals.Google;
+using RosterSync.Core.Internals.Google.Calendar;
+using RosterSync.Core.SyncConfig;
 using RosterSync.Model;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(builder.Configuration["Auth:FrontendUrl"]!)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 builder.Services.AddOpenApi();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -42,8 +54,10 @@ builder.Services.AddScoped<IDbContext>(sp =>
 
 builder.Services.AddHttpClient<RosterScraper>();
 builder.Services.AddTransient<IRosterScraper, RosterScraper>();
+builder.Services.AddScoped<ISyncConfigService, SyncConfigService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.Configure<AuthSettings>(
     builder.Configuration.GetSection("Auth"));
 
@@ -54,10 +68,13 @@ if (app.Environment.IsDevelopment())
 }
 
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.AddRosterEndpoints()
-    .AddAuthenticationEndpoints();
+    .AddAuthenticationEndpoints()
+    .AddSyncConfigEndpoints()
+    .AddCalendarEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RosterSyncDbContext>();

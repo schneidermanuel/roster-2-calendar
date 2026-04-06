@@ -26,19 +26,16 @@ public class GoogleAuthService(
     {
         var flow = CreateFlow();
 
-        // Code gegen Token tauschen
         TokenResponse tokenResponse = await flow.ExchangeCodeForTokenAsync(
             userId: "",
             code: code,
             redirectUri: settings.Value.Google.RedirectUri,
             taskCancellationToken: cancellationToken);
 
-        // Google User Info laden
         var payload = await GoogleJsonWebSignature.ValidateAsync(tokenResponse.IdToken);
 
         await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-        // User anlegen oder updaten
         var user = await db.Users
             .Include(u => u.Token)
             .FirstOrDefaultAsync(u => u.GoogleId == payload.Subject, cancellationToken);
@@ -61,7 +58,6 @@ public class GoogleAuthService(
             user.DisplayName = payload.Name;
         }
 
-        // Token speichern / updaten
         if (user.Token is null)
         {
             user.Token = new UserToken
