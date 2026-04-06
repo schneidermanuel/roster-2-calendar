@@ -6,7 +6,7 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["RosterSync.Api/RosterSync.Api.csproj", "RosterSync.Api/"]
+COPY ["RosterSync.Api.csproj", "RosterSync.Api/"]
 RUN dotnet restore "RosterSync.Api/RosterSync.Api.csproj"
 COPY . .
 WORKDIR "/src/RosterSync.Api"
