@@ -11,6 +11,7 @@ public class SyncLog
     public required string Status { get; set; }
     public int EventsAdded { get; set; }
     public int EventsUpdated { get; set; }
+    public int EventsDeleted { get; set; }
     public string? ErrorMessage { get; set; }
 
     public required SyncConfig SyncConfig { get; set; }

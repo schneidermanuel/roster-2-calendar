@@ -53,6 +53,13 @@
             </div>
 
             <div class="flex items-center gap-2">
+              <button (click)="syncNow(sync.id)"
+                      style="background: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.15s;"
+                      onmouseover="this.style.background='rgba(255,255,255,0.06)'"
+                      onmouseout="this.style.background='transparent'"
+                      title="Open roster in new tab">
+                Sync Now
+              </button>
               <button (click)="openRoster(sync.rosterUrl)"
                       style="background: transparent; border: none; cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: background 0.15s;"
                       onmouseover="this.style.background='rgba(255,255,255,0.06)'"

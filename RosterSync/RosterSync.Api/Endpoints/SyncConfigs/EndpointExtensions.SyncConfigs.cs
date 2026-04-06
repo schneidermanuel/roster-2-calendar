@@ -20,6 +20,11 @@ public static class EndpointExtensions
                 .Produces<SyncConfigDto>(StatusCodes.Status201Created)
                 .WithName("CreateSync")
                 .RequireAuthorization();
+            builder.MapPost("/api/syncs/{id:int}/sync", SyncConfigEndpoints.RunSync())
+                .Produces(StatusCodes.Status202Accepted)
+                .Produces(StatusCodes.Status400BadRequest)
+                .WithName("RunSync")
+                .RequireAuthorization();
 
             return builder;
         }

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace RosterSync.Core;
 
-public class RosterScraper(HttpClient httpClient) : IRosterScraper
+public class RosterScraper() : IRosterScraper
 {
     private static readonly Regex RosterEventsRegex = new(
         @"window\.rosterEvents\s*=\s*(\[.*?\])\s*;",
@@ -17,6 +17,7 @@ public class RosterScraper(HttpClient httpClient) : IRosterScraper
 
     public async Task<IReadOnlyList<RosterEvent>> ScrapeAsync(string url, CancellationToken cancellationToken = default)
     {
+        var httpClient = new HttpClient();
         var html = await httpClient.GetStringAsync(url, cancellationToken);
 
         var match = RosterEventsRegex.Match(html);

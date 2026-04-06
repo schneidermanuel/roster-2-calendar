@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RosterSync.Api;
 
@@ -11,9 +12,11 @@ using RosterSync.Api;
 namespace RosterSync.Api.Migrations
 {
     [DbContext(typeof(RosterSyncDbContext))]
-    partial class RosterSyncDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406090410_v2")]
+    partial class v2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

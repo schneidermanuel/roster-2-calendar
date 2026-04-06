@@ -39,7 +39,7 @@ public class SyncConfigService(IDbContext db) : ISyncConfigService
         CancellationToken cancellationToken = default)
     {
         var randomTime = TimeOnly.FromTimeSpan(
-            TimeSpan.FromMinutes(Random.Shared.Next(0, 24 * 60)));
+            TimeSpan.FromMinutes(Random.Shared.Next(0, 22 * 60)));
         var user = await db.Users.SingleOrDefaultAsync(u=>u.Id == userId, cancellationToken);
         if (user is null)
         {

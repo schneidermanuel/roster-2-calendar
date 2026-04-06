@@ -87,7 +87,10 @@ export class User implements OnInit {
     const isToday = date.toDateString() === now.toDateString();
     const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     return isToday
-      ? `Last synced today at ${time}`
-      : `Last synced ${date.toLocaleDateString()} at ${time}`;
+      ? `Last synced today at ${time}Z`
+      : `Last synced ${date.toLocaleDateString()} at ${time}Z`;
+  }
+  syncNow(id: number) {
+    this.#service.runSync(id).subscribe({});
   }
 }

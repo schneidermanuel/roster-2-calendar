@@ -52,12 +52,16 @@ builder.Services.AddDbContextFactory<RosterSyncDbContext>(options =>
 builder.Services.AddScoped<IDbContext>(sp =>
     sp.GetRequiredService<RosterSyncDbContext>());
 
-builder.Services.AddHttpClient<RosterScraper>();
-builder.Services.AddTransient<IRosterScraper, RosterScraper>();
+builder.Services.AddHostedService<SyncWorker>();
+builder.Services.AddHostedService<AutoSyncWorker>();
+builder.Services.AddSingleton<WorkerQueue>();
+builder.Services.AddScoped<RosterSyncService>();
+builder.Services.AddScoped<IRosterScraper, RosterScraper>();
+builder.Services.AddScoped<ITokenRefreshService, TokenRefreshService>();
+builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.AddScoped<ISyncConfigService, SyncConfigService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
-builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.Configure<AuthSettings>(
     builder.Configuration.GetSection("Auth"));
 
