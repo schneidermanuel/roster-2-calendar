@@ -1,6 +1,7 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../environment/environment';
+import { RosterSyncApiService } from '../api';
 
 @Component({
   selector: 'app-landing',
@@ -9,6 +10,7 @@ import { environment } from '../../environment/environment';
   styleUrl: './landing.scss',
 })
 export class Landing implements OnInit {
+  readonly #service = inject(RosterSyncApiService);
   protected isLoggedIn = computed(() => {
     return !!this.token();
   });
@@ -21,7 +23,7 @@ export class Landing implements OnInit {
   }
 
   loginWithGoogle(): void {
-    window.location.href = `${environment.apiUrl}/auth/google/login`;
+    this.#service.googleLogin().subscribe(url=> window.location.href = url);
   }
   logout(): void {
     localStorage.removeItem('auth_token');

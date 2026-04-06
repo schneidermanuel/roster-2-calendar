@@ -8,7 +8,7 @@ public static class EndpointExtensions
         public IEndpointRouteBuilder AddAuthenticationEndpoints()
         {
             builder.MapGet("/auth/google/login", AuthenticationEndpoints.GoogleAuthorize())
-                .Produces(StatusCodes.Status303SeeOther)
+                .Produces<string>()
                 .WithName("GoogleLogin")
                 .WithDescription("Redirect to the google login screen");
 
