@@ -7,13 +7,13 @@ public static class EndpointExtensions
     {
         public IEndpointRouteBuilder AddAuthenticationEndpoints()
         {
-            builder.MapGet("/auth/gogle/login", AuthenticationEndpoints.GoogleAuthorize())
+            builder.MapGet("/auth/google/login", AuthenticationEndpoints.GoogleAuthorize())
                 .Produces(StatusCodes.Status303SeeOther)
                 .WithName("GoogleLogin")
                 .WithDescription("Redirect to the google login screen");
 
             builder.MapGet("/auth/google/callback", AuthenticationEndpoints.CodeCallback())
-                .Produces<string>()
+                .Produces(StatusCodes.Status303SeeOther)
                 .WithName("GoogleCodeExchange")
                 .WithDescription("Exchanges a code from google authentication for a jwt");
             return builder;

@@ -1,11 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web"> 
+﻿<Project Sdk="Microsoft.NET.Sdk.Web"> 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <AllowMissingPrunePackageData>true</AllowMissingPrunePackageData>
-    </PropertyGroup>
+      <UserSecretsId>5f0c4f0c-3ba4-4a81-9d91-8bb12e62e289</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />

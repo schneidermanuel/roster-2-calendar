@@ -94,6 +94,12 @@ public class GoogleAuthService(
                 ClientId = settings.Value.Google.ClientId,
                 ClientSecret = settings.Value.Google.ClientSecret
             },
-            Scopes = [CalendarService.Scope.Calendar]
+            Scopes =
+            [
+                "openid",
+                "email",
+                "profile",
+                CalendarService.Scope.Calendar
+            ]
         });
 }

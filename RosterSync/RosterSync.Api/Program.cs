@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RosterSync.Api;
 using RosterSync.Api.Endpoints;
+using RosterSync.Api.Endpoints.Authentication;
 using RosterSync.Api.Endpoints.Authentication.Internals;
 using RosterSync.Core;
 using RosterSync.Core.Internals.Google;
@@ -55,7 +56,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.AddRosterEndpoints();
+app.AddRosterEndpoints()
+    .AddAuthenticationEndpoints();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<RosterSyncDbContext>();

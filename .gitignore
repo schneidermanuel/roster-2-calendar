@@ -32,6 +32,7 @@ artifacts/
 ScaffoldingReadMe.txt
 appsettings.Development.json
 **/.idea/**
+client_secret.json
 
 # NuGet Packages
 *.nupkg

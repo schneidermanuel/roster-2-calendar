@@ -1,0 +1,138 @@
+<div class="relative min-h-screen overflow-hidden flex-col justify-between flex"
+     style="background: #0a0e17; color: #e8eaf0;">
+  <div class="grid-bg"></div>
+  <div class="glow"></div>
+
+  <!-- Nav -->
+  <nav class="relative z-10 flex items-center justify-between px-12 py-6 w-full"
+       style="border-bottom: 0.5px solid rgba(255,255,255,0.07)">
+    <div class="flex items-center gap-3" style="font-size: 15px; font-weight: 500;">
+      <div class="flex items-center justify-center w-7 h-7 rounded-lg"
+           style="background: linear-gradient(135deg, #526eff, #3a50cc);">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8h12M8 3l5 5-5 5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round"/>
+        </svg>
+      </div>
+      RosterSync
+    </div>
+    <span class="text-xs px-3 py-1 rounded-full"
+          style="color: #7b8ab8; border: 0.5px solid rgba(99,119,200,0.3); letter-spacing: 0.05em;">BETA</span>
+  </nav>
+
+  <!-- Hero -->
+  <div class="relative z-10 flex flex-col items-center text-center w-fill">
+    <div class="flex items-center gap-2 mb-6"
+         style="font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #526eff;">
+      <span style="display:block; width:24px; height:0.5px; background:#526eff; opacity:0.6;"></span>
+      Automatic Calendar Sync
+      <span style="display:block; width:24px; height:0.5px; background:#526eff; opacity:0.6;"></span>
+    </div>
+
+    <h1 class="mb-6" style="color: #f0f2f8;">
+      Your roster.<br>
+      <em style="font-style: italic; color: #7b8fe8;">In your calendar.</em>
+    </h1>
+
+    <p class="mb-10" style="font-size: 1rem; font-weight: 300; color: #8892b0; line-height: 1.7; max-width: 460px;">
+      Connect your crew roster once and let RosterSync keep your Google Calendar up to date — automatically, every day.
+    </p>
+    <br>
+    <br>
+
+    @if (isLoggedIn()) {
+      <button
+        routerLink="/user"
+        class="flex items-center gap-3 cursor-pointer"
+        style="background: #526eff; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 0.75rem 1.75rem; border-radius: 10px; border: none; box-shadow: 0 2px 20px rgba(82,110,255,0.3); letter-spacing: 0.01em; transition: transform 0.15s, box-shadow 0.15s;"
+        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 30px rgba(82,110,255,0.4)'"
+        onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 20px rgba(82,110,255,0.3)'">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="1" width="7" height="7" rx="1.5" stroke="#fff" stroke-width="1.5"/>
+          <rect x="10" y="1" width="7" height="7" rx="1.5" stroke="#fff" stroke-width="1.5"/>
+          <rect x="1" y="10" width="7" height="7" rx="1.5" stroke="#fff" stroke-width="1.5"/>
+          <rect x="10" y="10" width="7" height="7" rx="1.5" stroke="#fff" stroke-width="1.5"/>
+        </svg>
+        Dashboard
+      </button>
+      <br>
+
+      <button
+        (click)="logout()"
+        class="flex items-center gap-3 cursor-pointer"
+        style="background: transparent; color: #e8eaf0; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 0.75rem 1.75rem; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.15); box-shadow: 0 2px 20px rgba(0,0,0,0.3); letter-spacing: 0.01em; transition: transform 0.15s, box-shadow 0.15s;"
+        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 30px rgba(0,0,0,0.4)'"
+        onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 20px rgba(0,0,0,0.3)'">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M7 3H3a1 1 0 00-1 1v10a1 1 0 001 1h4" stroke="#e8eaf0" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 13l4-4-4-4M16 9H7" stroke="#e8eaf0" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round"/>
+        </svg>
+        Sign out
+      </button>
+    } @else {
+
+
+      <button
+        (click)="loginWithGoogle()"
+        class="flex items-center gap-3 cursor-pointe"
+        style="background: #fff; color: #1a1a2e; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 0.75rem 1.75rem; border-radius: 10px; border: none; box-shadow: 0 2px 20px rgba(0,0,0,0.3); letter-spacing: 0.01em; transition: transform 0.15s, box-shadow 0.15s;"
+        onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 30px rgba(0,0,0,0.4)'"
+        onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 20px rgba(0,0,0,0.3)'">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+            fill="#4285F4"/>
+          <path
+            d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+            fill="#34A853"/>
+          <path
+            d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
+            fill="#FBBC05"/>
+          <path
+            d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
+            fill="#EA4335"/>
+        </svg>
+        Sign in with Google
+      </button>
+    }
+  </div>
+
+  <!-- Features -->
+  <div class="relative z-10 mx-auto flex w-full gap flex-row justify-around">
+    <div class="p-6" style="background: rgba(10,14,23,0.6);">
+      <svg class="mb-3 opacity-70" width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect x="4" y="6" width="24" height="22" rx="3" stroke="#526eff" stroke-width="1.5"/>
+        <path d="M4 12h24M11 4v4M21 4v4" stroke="#526eff" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M9 18h6M9 22h10" stroke="#526eff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+      </svg>
+      <h3 class="mb-1" style="font-size: 13px; font-weight: 500; color: #c8d0e8;">Daily sync</h3>
+      <p style="font-size: 12px; font-weight: 300; color: #5a6480; line-height: 1.6;">Runs once a day at a random time
+        to stay under the radar</p>
+    </div>
+    <div class="p-6" style="background: rgba(10,14,23,0.6);">
+      <svg class="mb-3 opacity-70" width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <path d="M6 16c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10" stroke="#526eff" stroke-width="1.5"
+              stroke-linecap="round"/>
+        <path d="M6 16H2M16 6V2" stroke="#526eff" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="16" cy="16" r="3" fill="#526eff" opacity="0.7"/>
+      </svg>
+      <h3 class="mb-1" style="font-size: 13px; font-weight: 500; color: #c8d0e8;">Smart delta</h3>
+      <p style="font-size: 12px; font-weight: 300; color: #5a6480; line-height: 1.6;">Only changed or new flights are
+        updated — nothing is touched twice</p>
+    </div>
+    <div class="p-6" style="background: rgba(10,14,23,0.6);">
+      <svg class="mb-3 opacity-70" width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <path d="M10 16l4 4 8-8" stroke="#526eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="4" y="4" width="24" height="24" rx="5" stroke="#526eff" stroke-width="1.5" opacity="0.5"/>
+      </svg>
+      <h3 class="mb-1" style="font-size: 13px; font-weight: 500; color: #c8d0e8;">Google Calendar</h3>
+      <p style="font-size: 12px; font-weight: 300; color: #5a6480; line-height: 1.6;">Pick any calendar in your account
+        — personal, shared, whatever fits</p>
+    </div>
+  </div>
+
+  <div class="relative z-10 text-center p-8" style="font-size: 12px; color: #3a4060;">
+    No data stored beyond what's needed · Sign out anytime
+  </div>
+</div>
