@@ -30,7 +30,6 @@ public class RosterScraper() : IRosterScraper
                      ?? throw new InvalidOperationException("Failed to deserialize rosterEvents");
 
         return events
-            .Where(e => !string.Equals(e.Type, "off", StringComparison.OrdinalIgnoreCase))
             .ToList()
             .AsReadOnly();
     }
