@@ -59,6 +59,21 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
         await service.Events.Delete(config.GoogleCalendarId, googleEventId).ExecuteAsync(cancellationToken);
     }
 
+    private static string? GetColor(SyncedEvent e)
+    {
+        if (e.Type == "off")
+        {
+            return "8";
+        }
+
+        if (e.Type == "duty" || e.Type == "standby" || e.Type == "reserve")
+        {
+            return "7";
+        }
+
+        return null;
+    }
+
     private static Event MapToGoogleEvent(SyncedEvent e)
     {
         if (e.StartTime.AddDays(1).Equals(e.EndTime))
@@ -73,7 +88,7 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
                 {
                     UseDefault = false
                 },
-                ColorId = e.Type == "off" ? "8" : null
+                ColorId = GetColor(e)
             };
         }
 
@@ -86,7 +101,8 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
                 UseDefault = false
             },
             Start = new EventDateTime { DateTimeDateTimeOffset = e.StartTime, TimeZone = "UTC" },
-            End = new EventDateTime { DateTimeDateTimeOffset = e.EndTime, TimeZone = "UTC" }
+            End = new EventDateTime { DateTimeDateTimeOffset = e.EndTime, TimeZone = "UTC" },
+            ColorId = GetColor(e)
         };
     }
 

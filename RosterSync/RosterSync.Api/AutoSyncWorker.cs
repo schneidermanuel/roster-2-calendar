@@ -19,8 +19,8 @@ public class AutoSyncWorker(IServiceProvider provider, WorkerQueue queue) : Back
 
             var configsToRun = await db.SyncConfigs
                 .Where(config =>
-                    config.DailyTriggerTime <= currentTime
-                    &&
+                    config.DailyTriggerTime <= currentTime &&
+                    config.IsActive &&
                     !db.SyncLogs.Any(log =>
                         log.SyncConfigId == config.Id &&
                         log.StartedAt >= startOfDay &&
