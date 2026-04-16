@@ -23,6 +23,11 @@ public class SyncedEvent
 }
 file class SyncedEventConfiguration : IEntityTypeConfiguration<SyncedEvent>
 {
+    private static readonly ValueConverter<DateTime, DateTime> _utcConverter = new(
+        v => v,
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc)
+    );
+
     public void Configure(EntityTypeBuilder<SyncedEvent> builder)
     {
         builder.HasKey(se => se.Id);
@@ -38,5 +43,9 @@ file class SyncedEventConfiguration : IEntityTypeConfiguration<SyncedEvent>
                .WithMany(c => c.SyncedEvents)
                .HasForeignKey(se => se.SyncConfigId)
                .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(se => se.StartTime).HasConversion(_utcConverter);
+        builder.Property(se => se.EndTime).HasConversion(_utcConverter);
+        builder.Property(se => se.LastSyncedAt).HasConversion(_utcConverter);
+
     }
 }
