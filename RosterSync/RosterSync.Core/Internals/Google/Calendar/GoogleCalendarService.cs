@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
@@ -61,17 +62,27 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
 
     private static string? GetColor(SyncedEvent e)
     {
+        if (IsE1Flight(e))
+        {
+            return "4";
+        }
+
         if (e.Type == "off")
         {
             return "8";
         }
 
-        if (e.Type == "duty" || e.Type == "standby" || e.Type == "reserve")
+        if (e.Type == "duty" || e.Type == "standby" || e.Type == "reserve" || e.Type == "ac")
         {
             return "7";
         }
 
         return null;
+    }
+
+    private static bool IsE1Flight(SyncedEvent e)
+    {
+        return Regex.IsMatch(e.Description, "HBJV.");
     }
 
     private static Event MapToGoogleEvent(SyncedEvent e)
@@ -86,7 +97,8 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
                 End = new EventDateTime { Date = e.EndTime.ToString("yyyy-MM-dd") },
                 Reminders = new Event.RemindersData
                 {
-                    UseDefault = false
+                    UseDefault = false,
+                    Overrides = GetReminders(e)
                 },
                 ColorId = GetColor(e)
             };
@@ -98,12 +110,30 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
             Description = e.Description,
             Reminders = new Event.RemindersData
             {
-                UseDefault = false
+                UseDefault = false,
+                Overrides = GetReminders(e)
             },
             Start = new EventDateTime { DateTimeDateTimeOffset = e.StartTime, TimeZone = "UTC" },
             End = new EventDateTime { DateTimeDateTimeOffset = e.EndTime, TimeZone = "UTC" },
             ColorId = GetColor(e)
         };
+    }
+
+    private static IList<EventReminder> GetReminders(SyncedEvent e)
+    {
+        if (IsE1Flight(e))
+        {
+            return
+            [
+                new EventReminder
+                {
+                    Method = "popup",
+                    Minutes = 24 * 60
+                }
+            ];
+        }
+
+        return [];
     }
 
     private static string GetTitle(SyncedEvent e) => e.Type.ToLowerInvariant() switch

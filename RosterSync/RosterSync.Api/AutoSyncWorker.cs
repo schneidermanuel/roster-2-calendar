@@ -12,20 +12,10 @@ public class AutoSyncWorker(IServiceProvider provider, WorkerQueue queue) : Back
         {
             await using var scope = provider.CreateAsyncScope();
             var db = scope.ServiceProvider.GetRequiredService<IDbContext>();
-            var now = DateTime.Now;
-            var startOfDay = now.Date;
-            var endOfDay = startOfDay.AddDays(1);
-            var currentTime = TimeOnly.FromDateTime(now);
 
             var configsToRun = await db.SyncConfigs
                 .Where(config =>
-                    config.DailyTriggerTime <= currentTime &&
-                    config.IsActive &&
-                    !db.SyncLogs.Any(log =>
-                        log.SyncConfigId == config.Id &&
-                        log.StartedAt >= startOfDay &&
-                        log.StartedAt < endOfDay
-                    )
+                    config.IsActive
                 )
                 .ToListAsync(stoppingToken);
             foreach (var syncConfig in configsToRun)

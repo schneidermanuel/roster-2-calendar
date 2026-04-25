@@ -12,7 +12,7 @@ public class RosterSyncService(
 {
     public async Task SyncAsync(int configId, CancellationToken cancellationToken)
     {
-        var config = await db.SyncConfigs.SingleAsync(c=>c.Id == configId, cancellationToken);
+        var config = await db.SyncConfigs.SingleAsync(c => c.Id == configId, cancellationToken);
         var log = new SyncLog
         {
             SyncConfig = config,
@@ -34,7 +34,7 @@ public class RosterSyncService(
                 return;
             }
 
-            var firstSentEvent = rosterEvents.Min(e => e.StartTime);
+            var firstSentEvent = rosterEvents.Min(e => e.StartTime.Date);
 
             var dbEvents = await db.SyncedEvents
                 .Where(e => e.SyncConfigId == config.Id)
@@ -92,7 +92,7 @@ public class RosterSyncService(
             {
                 if (!rosterByKey.ContainsKey(key))
                 {
-                    if (dbEvent.StartTime > firstSentEvent)
+                    if (dbEvent.StartTime >= firstSentEvent)
                     {
                         await calendarService.DeleteEventAsync(
                             config.UserId, config, dbEvent.GoogleEventId, cancellationToken);
