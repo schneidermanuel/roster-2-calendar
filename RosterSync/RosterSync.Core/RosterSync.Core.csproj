@@ -9,6 +9,8 @@
     <ItemGroup>
       <PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
       <PackageReference Include="Google.Apis.Calendar.v3" Version="1.73.0.4073" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="11.0.0-preview.3.26207.106" />
+      <PackageReference Include="System.Net.Http" Version="4.3.4" />
     </ItemGroup>
 
     <ItemGroup>

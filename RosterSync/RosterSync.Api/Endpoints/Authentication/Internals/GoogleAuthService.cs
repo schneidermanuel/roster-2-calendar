@@ -5,6 +5,7 @@ using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Calendar.v3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using RosterSync.Core.Internals;
 using RosterSync.Core.Internals.Google;
 using RosterSync.Model.Entities;
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using RosterSync.Api.Endpoints.Authentication.Internals;
+using RosterSync.Core.Internals;
 using RosterSync.Core.Internals.Google;
 
 namespace RosterSync.Api.Endpoints.Authentication;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RosterSync.Core.Internals.Google.Calendar;
+using RosterSync.Core.Waha.Internals;
 using RosterSync.Model;
 using RosterSync.Model.Entities;
 
@@ -8,7 +9,8 @@ namespace RosterSync.Core;
 public class RosterSyncService(
     IDbContext db,
     IRosterScraper scraper,
-    IGoogleCalendarService calendarService)
+    IGoogleCalendarService calendarService,
+    WahaClient waha)
 {
     public async Task SyncAsync(int configId, CancellationToken cancellationToken)
     {
@@ -25,6 +27,7 @@ public class RosterSyncService(
 
         try
         {
+            var needWhatsappNotification = false;
             var rosterEvents = await scraper.ScrapeAsync(config.RosterUrl, cancellationToken);
             if (!rosterEvents.Any())
             {
@@ -61,6 +64,10 @@ public class RosterSyncService(
                             config.UserId, config, existing, cancellationToken);
 
                         updated++;
+                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                        {
+                            needWhatsappNotification = true;
+                        }
                     }
                 }
                 else
@@ -84,6 +91,10 @@ public class RosterSyncService(
 
                     newEvent.GoogleEventId = googleId;
                     added++;
+                    if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                    {
+                        needWhatsappNotification = true;
+                    }
                 }
             }
 
@@ -110,6 +121,10 @@ public class RosterSyncService(
             log.EventsDeleted = deleted;
 
             await db.SaveChangesAsync(cancellationToken);
+            if (needWhatsappNotification&&!string.IsNullOrEmpty(config.PhoneNumber))
+            {
+                await waha.SendMessage(config.PhoneNumber!, "You have new duty changes. Please review now", cancellationToken);
+            }
         }
         catch (Exception ex)
         {

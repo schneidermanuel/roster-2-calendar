@@ -13,6 +13,7 @@ public class SyncConfig
     public bool IsActive { get; set; } = true;
     public TimeOnly DailyTriggerTime { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? PhoneNumber { get; set; }
 
     public required User User { get; set; }
     public ICollection<SyncedEvent> SyncedEvents { get; set; } = [];
@@ -26,6 +27,7 @@ file class SyncConfigConfiguration : IEntityTypeConfiguration<SyncConfig>
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).ValueGeneratedOnAdd();
         builder.Property(c => c.RosterUrl).HasMaxLength(2048);
+        builder.Property(c => c.PhoneNumber).HasMaxLength(15);
         builder.Property(c => c.GoogleCalendarId).HasMaxLength(500);
         builder.Property(c => c.CalendarName).HasMaxLength(255);
     }

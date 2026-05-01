@@ -9,9 +9,12 @@ using RosterSync.Api.Endpoints.Authentication.Internals;
 using RosterSync.Api.Endpoints.Calendars;
 using RosterSync.Api.Endpoints.SyncConfigs;
 using RosterSync.Core;
+using RosterSync.Core.Internals;
 using RosterSync.Core.Internals.Google;
 using RosterSync.Core.Internals.Google.Calendar;
 using RosterSync.Core.SyncConfig;
+using RosterSync.Core.Waha;
+using RosterSync.Core.Waha.Internals;
 using RosterSync.Model;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +65,7 @@ builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.AddScoped<ISyncConfigService, SyncConfigService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+builder.Services.AddScoped<WahaClient>();
 builder.Services.Configure<AuthSettings>(
     builder.Configuration.GetSection("Auth"));
 
