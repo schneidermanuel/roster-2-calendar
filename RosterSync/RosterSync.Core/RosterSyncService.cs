@@ -64,7 +64,7 @@ public class RosterSyncService(
                             config.UserId, config, existing, cancellationToken);
 
                         updated++;
-                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1)&& rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                         {
                             needWhatsappNotification = true;
                         }
@@ -91,7 +91,7 @@ public class RosterSyncService(
 
                     newEvent.GoogleEventId = googleId;
                     added++;
-                    if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                    if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1) && newEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                     {
                         needWhatsappNotification = true;
                     }
