@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using RosterSync.Core.Internals.Google.Calendar;
 using RosterSync.Core.Waha.Internals;
@@ -27,7 +28,7 @@ public class RosterSyncService(
 
         try
         {
-            var needWhatsappNotification = false;
+            var whatsappNotification = new StringBuilder();
             var rosterEvents = await scraper.ScrapeAsync(config.RosterUrl, cancellationToken);
             if (!rosterEvents.Any())
             {
@@ -57,6 +58,12 @@ public class RosterSyncService(
                 {
                     if (HasChanged(existing, rosterEvent))
                     {
+                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
+                            rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
+                        {
+                            AppendEventChangedMessage(whatsappNotification, rosterEvent, existing);
+                        }
+                        
                         MapToEntity(existing, rosterEvent);
                         existing.LastSyncedAt = DateTime.UtcNow;
 
@@ -64,10 +71,6 @@ public class RosterSyncService(
                             config.UserId, config, existing, cancellationToken);
 
                         updated++;
-                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1)&& rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
-                        {
-                            needWhatsappNotification = true;
-                        }
                     }
                 }
                 else
@@ -91,9 +94,10 @@ public class RosterSyncService(
 
                     newEvent.GoogleEventId = googleId;
                     added++;
-                    if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1) && newEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
+                    if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
+                        newEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                     {
-                        needWhatsappNotification = true;
+                        whatsappNotification.AppendLine($"New event at {newEvent.StartTime.ToString("dd.MM")} {newEvent.Description}");
                     }
                 }
             }
@@ -110,6 +114,10 @@ public class RosterSyncService(
                     }
 
                     db.SyncedEvents.Remove(dbEvent);
+                    if (dbEvent.StartTime.ToUniversalTime() > DateTime.UtcNow && dbEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                    {
+                        whatsappNotification.AppendLine($"Event at {dbEvent.StartTime.ToString("dd.MM")} {dbEvent.Description} has been cancelled");
+                    }
                     deleted++;
                 }
             }
@@ -121,9 +129,11 @@ public class RosterSyncService(
             log.EventsDeleted = deleted;
 
             await db.SaveChangesAsync(cancellationToken);
-            if (needWhatsappNotification&&!string.IsNullOrEmpty(config.PhoneNumber))
+            var whatsapp = whatsappNotification.ToString();
+            if (!string.IsNullOrWhiteSpace(whatsapp) && !string.IsNullOrEmpty(config.PhoneNumber))
             {
-                await waha.SendMessage(config.PhoneNumber!, "You have new duty changes. Please review now", cancellationToken);
+                await waha.SendMessage(config.PhoneNumber!, $"You have new duty changes. Please review now\n\n{whatsapp}",
+                    cancellationToken);
             }
         }
         catch (Exception ex)
@@ -134,6 +144,41 @@ public class RosterSyncService(
             await db.SaveChangesAsync(cancellationToken);
             throw;
         }
+    }
+
+    private void AppendEventChangedMessage(StringBuilder whatsappNotification, RosterEvent rosterEvent,
+        SyncedEvent existing)
+    {
+        if (rosterEvent.Type == "flight")
+        {
+            whatsappNotification.Append(
+                $"Change at {rosterEvent.StartTime.ToString("dd.MM")} on Flight {rosterEvent.FlightNumber}: ");
+            if (GetAircraft(existing) != rosterEvent.Aircraft)
+            {
+                whatsappNotification.Append($"Aircraft changed to {rosterEvent.Aircraft}.");
+            }
+            else if (rosterEvent.Description != existing.Description)
+            {
+                whatsappNotification.Append("Description changed.");
+            }
+
+            whatsappNotification.AppendLine();
+            return;
+        }
+
+        whatsappNotification.AppendLine(
+            $"Change at {rosterEvent.StartTime.ToString("dd.MM")} on {rosterEvent.Description}");
+    }
+
+    private string? GetAircraft(SyncedEvent flight)
+    {
+        var parts = flight.Description?.Split(", ") ?? [];
+        if (parts.Length > 1)
+        {
+            return parts[1].Trim();
+        }
+
+        return null;
     }
 
     private static void MapToEntity(SyncedEvent entity, RosterEvent roster)
@@ -151,16 +196,16 @@ public class RosterSyncService(
 
     private static string GetNaturalKey(RosterEvent e) => e.Type.ToLowerInvariant() switch
     {
-        "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMddHHmm}",
-        "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMddHHmm}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
+        "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
+        "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
+        _ => $"{e.Type}_{e.StartTime:yyyyMMdd}"
     };
 
     private static string GetNaturalKey(SyncedEvent e) => e.Type.ToLowerInvariant() switch
     {
-        "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMddHHmm}",
-        "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMddHHmm}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
+        "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
+        "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
+        _ => $"{e.Type}_{e.StartTime:yyyyMMdd}"
     };
 
     private static bool HasChanged(SyncedEvent db, RosterEvent roster) =>
