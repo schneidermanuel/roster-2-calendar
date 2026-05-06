@@ -198,14 +198,14 @@ public class RosterSyncService(
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMdd}"
+        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
     };
 
     private static string GetNaturalKey(SyncedEvent e) => e.Type.ToLowerInvariant() switch
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMdd}"
+        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
     };
 
     private static bool HasChanged(SyncedEvent db, RosterEvent roster) =>
