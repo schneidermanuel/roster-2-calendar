@@ -63,7 +63,7 @@ public class RosterSyncService(
                         {
                             AppendEventChangedMessage(whatsappNotification, rosterEvent, existing);
                         }
-                        
+
                         MapToEntity(existing, rosterEvent);
                         existing.LastSyncedAt = DateTime.UtcNow;
 
@@ -89,15 +89,20 @@ public class RosterSyncService(
                     // Erst speichern, dann Google ID zurückschreiben
                     await db.SaveChangesAsync(cancellationToken);
 
-                    var googleId = await calendarService.CreateEventAsync(
-                        config.UserId, config, newEvent, cancellationToken);
+                    if (rosterEvent.Type != "vacation")
+                    {
+                        var googleId = await calendarService.CreateEventAsync(
+                            config.UserId, config, newEvent, cancellationToken);
 
-                    newEvent.GoogleEventId = googleId;
+                        newEvent.GoogleEventId = googleId;
+                    }
+
                     added++;
                     if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
                         newEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                     {
-                        whatsappNotification.AppendLine($"New event at {newEvent.StartTime.ToString("dd.MM")} {newEvent.Description}");
+                        whatsappNotification.AppendLine(
+                            $"New event at {newEvent.StartTime.ToString("dd.MM")} {newEvent.Description}");
                     }
                 }
             }
@@ -114,10 +119,13 @@ public class RosterSyncService(
                     }
 
                     db.SyncedEvents.Remove(dbEvent);
-                    if (dbEvent.StartTime.ToUniversalTime() > DateTime.UtcNow && dbEvent.StartTime.Date <= DateTime.Today.AddDays(1))
+                    if (dbEvent.StartTime.ToUniversalTime() > DateTime.UtcNow &&
+                        dbEvent.StartTime.Date <= DateTime.Today.AddDays(1))
                     {
-                        whatsappNotification.AppendLine($"Event at {dbEvent.StartTime.ToString("dd.MM")} {dbEvent.Description} has been cancelled");
+                        whatsappNotification.AppendLine(
+                            $"Event at {dbEvent.StartTime.ToString("dd.MM")} {dbEvent.Description} has been cancelled");
                     }
+
                     deleted++;
                 }
             }
@@ -132,7 +140,8 @@ public class RosterSyncService(
             var whatsapp = whatsappNotification.ToString();
             if (!string.IsNullOrWhiteSpace(whatsapp) && !string.IsNullOrEmpty(config.PhoneNumber))
             {
-                await waha.SendMessage(config.PhoneNumber!, $"You have new duty changes. Please review now\n\n{whatsapp}",
+                await waha.SendMessage(config.PhoneNumber!,
+                    $"You have new duty changes. Please review now\n\n{whatsapp}",
                     cancellationToken);
             }
         }
