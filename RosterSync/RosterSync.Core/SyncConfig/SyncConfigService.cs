@@ -15,12 +15,14 @@ public class SyncConfigService(IDbContext db) : ISyncConfigService
                 c.Id,
                 c.CalendarName,
                 c.RosterUrl,
+                c.LinkType,
                 c.IsActive,
                 db.SyncLogs
                     .Where(l => l.SyncConfigId == c.Id && l.Status == "Success")
                     .OrderByDescending(l => l.FinishedAt)
                     .Select(l => l.FinishedAt)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+                c.PhoneNumber
             ))
             .ToListAsync(cancellationToken);
     }
@@ -51,6 +53,8 @@ public class SyncConfigService(IDbContext db) : ISyncConfigService
             GoogleCalendarId = dto.GoogleCalendarId,
             CalendarName = dto.CalendarName,
             RosterUrl = dto.RosterUrl,
+            LinkType = dto.LinkType,
+            PhoneNumber = dto.PhoneNumber,
             IsActive = true,
             DailyTriggerTime = randomTime,
             CreatedAt = DateTime.UtcNow,
@@ -60,6 +64,7 @@ public class SyncConfigService(IDbContext db) : ISyncConfigService
         db.SyncConfigs.Add(config);
         await db.SaveChangesAsync(cancellationToken);
 
-        return new SyncConfigDto(config.Id, config.CalendarName, config.RosterUrl, config.IsActive, null);
+        return new SyncConfigDto(config.Id, config.CalendarName, config.RosterUrl, config.LinkType, config.IsActive,
+            null, config.PhoneNumber);
     }
 }

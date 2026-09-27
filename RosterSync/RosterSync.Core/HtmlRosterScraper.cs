@@ -1,9 +1,10 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using RosterSync.Model.Entities;
 
 namespace RosterSync.Core;
 
-public class RosterScraper() : IRosterScraper
+public class HtmlRosterScraper() : IRosterScraper
 {
     private static readonly Regex RosterEventsRegex = new(
         @"window\.rosterEvents\s*=\s*(\[.*?\])\s*;",
@@ -14,6 +15,8 @@ public class RosterScraper() : IRosterScraper
     {
         PropertyNameCaseInsensitive = true
     };
+
+    public LinkType SupportedType => LinkType.Html;
 
     public async Task<IReadOnlyList<RosterEvent>> ScrapeAsync(string url, CancellationToken cancellationToken = default)
     {

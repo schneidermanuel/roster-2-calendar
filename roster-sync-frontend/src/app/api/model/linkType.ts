@@ -9,14 +9,14 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { LinkType } from './linkType';
 
 
-export interface CreateSyncConfigDto {
-    googleCalendarId: string;
-    calendarName: string;
-    rosterUrl: string;
-    linkType?: LinkType;
-    phoneNumber?: string | null;
-}
+export const LinkType = {
+    Html: 'Html',
+    Ics: 'Ics'
+} as const;
+
+export type LinkType = typeof LinkType[keyof typeof LinkType];
+
+
 

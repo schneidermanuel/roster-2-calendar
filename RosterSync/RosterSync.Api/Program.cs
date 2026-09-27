@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -28,6 +29,8 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddOpenApi();
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -59,7 +62,8 @@ builder.Services.AddHostedService<SyncWorker>();
 builder.Services.AddHostedService<AutoSyncWorker>();
 builder.Services.AddSingleton<WorkerQueue>();
 builder.Services.AddScoped<RosterSyncService>();
-builder.Services.AddScoped<IRosterScraper, RosterScraper>();
+builder.Services.AddScoped<IRosterScraper, HtmlRosterScraper>();
+builder.Services.AddScoped<IRosterScraper, IcsRosterScraper>();
 builder.Services.AddScoped<ITokenRefreshService, TokenRefreshService>();
 builder.Services.AddScoped<IGoogleCalendarService, GoogleCalendarService>();
 builder.Services.AddScoped<ISyncConfigService, SyncConfigService>();

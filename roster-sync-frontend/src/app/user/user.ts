@@ -8,7 +8,7 @@ import {
   WritableSignal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { CalendarDto, RosterSyncApiService, SyncConfigDto } from '../api';
+import { CalendarDto, LinkType, RosterSyncApiService, SyncConfigDto } from '../api';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -27,6 +27,10 @@ export class User implements OnInit {
 
   protected newSyncCalendarId: ModelSignal<string> = model('');
   protected newSyncRosterUrl: ModelSignal<string> = model('');
+  protected newSyncLinkType: ModelSignal<LinkType> = model<LinkType>(LinkType.Html);
+  protected newSyncPhoneNumber: ModelSignal<string> = model('');
+
+  protected readonly LinkType = LinkType;
 
   ngOnInit() {
     const token = localStorage.getItem('auth_token');
@@ -49,6 +53,8 @@ export class User implements OnInit {
     this.showAddForm.set(!this.showAddForm());
     this.newSyncCalendarId.set('');
     this.newSyncRosterUrl.set('');
+    this.newSyncLinkType.set(LinkType.Html);
+    this.newSyncPhoneNumber.set('');
   }
   addSync() {
     const calendarName = this.calendars().filter((c) => c.id === this.newSyncCalendarId())[0]?.name;
@@ -57,6 +63,8 @@ export class User implements OnInit {
         googleCalendarId: this.newSyncCalendarId(),
         rosterUrl: this.newSyncRosterUrl(),
         calendarName: calendarName,
+        linkType: this.newSyncLinkType(),
+        phoneNumber: this.newSyncPhoneNumber().trim() || null,
       })
       .subscribe({
         next: (sync) => this.syncs.update((syncs) => [...syncs, sync]),

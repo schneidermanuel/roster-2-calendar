@@ -8,6 +8,7 @@ public class SyncConfig
     public int Id { get; set; }
     public Guid UserId { get; set; }
     public required string RosterUrl { get; set; }
+    public LinkType LinkType { get; set; } = LinkType.Html;
     public required string GoogleCalendarId { get; set; }
     public required string CalendarName { get; set; }
     public bool IsActive { get; set; } = true;
@@ -27,6 +28,7 @@ file class SyncConfigConfiguration : IEntityTypeConfiguration<SyncConfig>
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).ValueGeneratedOnAdd();
         builder.Property(c => c.RosterUrl).HasMaxLength(2048);
+        builder.Property(c => c.LinkType).HasConversion<string>().HasMaxLength(20);
         builder.Property(c => c.PhoneNumber).HasMaxLength(15);
         builder.Property(c => c.GoogleCalendarId).HasMaxLength(500);
         builder.Property(c => c.CalendarName).HasMaxLength(255);

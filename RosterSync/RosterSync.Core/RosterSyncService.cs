@@ -9,13 +9,15 @@ namespace RosterSync.Core;
 
 public class RosterSyncService(
     IDbContext db,
-    IRosterScraper scraper,
+    IEnumerable<IRosterScraper> scrapers,
     IGoogleCalendarService calendarService,
     WahaClient waha)
 {
     public async Task SyncAsync(int configId, CancellationToken cancellationToken)
     {
         var config = await db.SyncConfigs.SingleAsync(c => c.Id == configId, cancellationToken);
+        var scraper = scrapers.FirstOrDefault(s => s.SupportedType == config.LinkType)
+                      ?? throw new InvalidOperationException($"No scraper registered for link type {config.LinkType}");
         var log = new SyncLog
         {
             SyncConfig = config,

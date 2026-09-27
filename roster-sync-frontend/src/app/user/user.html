@@ -91,7 +91,7 @@
         class="mb-2 p-6"
         style="border: 0.5px solid rgba(82,110,255,0.25); border-radius: 14px; background: rgba(82,110,255,0.04);">
 
-        <div class="grid grid-cols-1 gap-4 mb-4" style="grid-template-columns: 1fr 1fr;">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <label
               style="font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #526eff; margin-bottom: 6px; display: block;">Calendar</label>
@@ -105,11 +105,32 @@
           </div>
           <div>
             <label
+              style="font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #526eff; margin-bottom: 6px; display: block;">Link
+              type</label>
+            <select [(ngModel)]="newSyncLinkType"
+                    style="width: 100%; background: rgba(10,14,23,0.8); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 0.65rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #e8eaf0; outline: none;">
+              <option [value]="LinkType.Html">Roster page (HTML)</option>
+              <option [value]="LinkType.Ics">Calendar feed (.ics)</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label
               style="font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #526eff; margin-bottom: 6px; display: block;">Roster
               URL</label>
             <input [(ngModel)]="newSyncRosterUrl"
                    type="text"
                    placeholder="https://rosterradar.webfms.app/…"
+                   style="width: 100%; background: rgba(10,14,23,0.8); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 0.65rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #e8eaf0; outline: none;"/>
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              style="font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: #526eff; margin-bottom: 6px; display: block;">Phone
+              number <span style="text-transform: none; color: #5a6480;">(optional, for WhatsApp change alerts)</span></label>
+            <input [(ngModel)]="newSyncPhoneNumber"
+                   type="tel"
+                   inputmode="tel"
+                   autocomplete="tel"
+                   placeholder="+41 79 123 45 67"
                    style="width: 100%; background: rgba(10,14,23,0.8); border: 0.5px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 0.65rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #e8eaf0; outline: none;"/>
           </div>
         </div>
