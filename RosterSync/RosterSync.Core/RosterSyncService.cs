@@ -58,9 +58,16 @@ public class RosterSyncService(
             {
                 if (dbByKey.TryGetValue(key, out var existing))
                 {
-                    if (HasChanged(existing, rosterEvent))
+                    var dataChanged = HasChanged(existing, rosterEvent);
+                    // A previous sync may have persisted the SyncedEvent row but failed before
+                    // recording the Google event id (e.g. Google API error) - retry it here.
+                    var missingGoogleEvent = string.IsNullOrEmpty(existing.GoogleEventId) &&
+                                             rosterEvent.Type != "vacation";
+
+                    if (dataChanged || missingGoogleEvent)
                     {
-                        if (rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
+                        if (dataChanged &&
+                            rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
                             rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                         {
                             AppendEventChangedMessage(whatsappNotification, rosterEvent, existing);
@@ -69,8 +76,19 @@ public class RosterSyncService(
                         MapToEntity(existing, rosterEvent);
                         existing.LastSyncedAt = DateTime.UtcNow;
 
-                        await calendarService.UpdateEventAsync(
-                            config.UserId, config, existing, cancellationToken);
+                        if (string.IsNullOrEmpty(existing.GoogleEventId))
+                        {
+                            if (rosterEvent.Type != "vacation")
+                            {
+                                existing.GoogleEventId = await calendarService.CreateEventAsync(
+                                    config.UserId, config, existing, cancellationToken);
+                            }
+                        }
+                        else
+                        {
+                            await calendarService.UpdateEventAsync(
+                                config.UserId, config, existing, cancellationToken);
+                        }
 
                         updated++;
                     }

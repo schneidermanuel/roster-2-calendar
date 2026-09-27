@@ -31,6 +31,10 @@ public class IcsRosterScraper() : IRosterScraper
             }
 
             var text = await File.ReadAllTextAsync(tempFile, cancellationToken);
+            if (!text.TrimStart().StartsWith("BEGIN:VCALENDAR", StringComparison.Ordinal))
+                throw new InvalidOperationException(
+                    $"Response from {url} was not a valid ICS calendar (expected 'BEGIN:VCALENDAR').");
+
             var calendar = Calendar.Load(text)
                            ?? throw new InvalidOperationException($"Failed to parse ICS calendar from {url}");
 
