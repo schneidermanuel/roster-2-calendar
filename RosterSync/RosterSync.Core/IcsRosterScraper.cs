@@ -45,7 +45,14 @@ public class IcsRosterScraper() : IRosterScraper
 
             events.AddRange(GetNightstops(events));
 
-            return events.AsReadOnly();
+            // Unlike the HTML source (which only ever returns today and future events),
+            // this feed contains the whole month - trim old events to match.
+            var cutoff = DateTime.UtcNow.Date.AddDays(-1);
+
+            return events
+                .Where(e => e.StartTime.Date >= cutoff)
+                .ToList()
+                .AsReadOnly();
         }
         finally
         {
