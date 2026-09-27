@@ -38,11 +38,14 @@ public class IcsRosterScraper() : IRosterScraper
             var calendar = Calendar.Load(text)
                            ?? throw new InvalidOperationException($"Failed to parse ICS calendar from {url}");
 
-            return calendar.Events
+            var events = calendar.Events
                 .Select(ToRosterEvent)
                 .OfType<RosterEvent>()
-                .ToList()
-                .AsReadOnly();
+                .ToList();
+
+            events.AddRange(GetNightstops(events));
+
+            return events.AsReadOnly();
         }
         finally
         {
@@ -100,6 +103,62 @@ public class IcsRosterScraper() : IRosterScraper
             CreatedAt = createdAt,
             Description = summary
         };
+    }
+
+    // A quick turnaround is typically under 2 hours; a genuine crew rest period is much
+    // longer. This distinguishes the two regardless of whether the gap happens to cross
+    // midnight (e.g. arrival 00:30, next departure 15:00 the same calendar day is still
+    // an overnight stay).
+    private static readonly TimeSpan MinimumNightstopGap = TimeSpan.FromHours(6);
+
+    // The feed has no explicit nightstop entries - infer them from two chronologically
+    // consecutive flights where the crew stays at the same away-station overnight.
+    private static IEnumerable<RosterEvent> GetNightstops(IReadOnlyList<RosterEvent> events)
+    {
+        var flights = events
+            .Where(e => e.Type == "flight" && e.Origin is not null && e.Destination is not null)
+            .OrderBy(e => e.StartTime)
+            .ToList();
+
+        if (flights.Count < 2)
+            yield break;
+
+        var homeAirport = GetHomeAirport(flights);
+
+        for (var i = 0; i < flights.Count - 1; i++)
+        {
+            var arrival = flights[i];
+            var departure = flights[i + 1];
+
+            if (arrival.Destination != departure.Origin)
+                continue;
+            if (arrival.Destination == homeAirport)
+                continue;
+            if (departure.StartTime - arrival.EndTime < MinimumNightstopGap)
+                continue; // quick turnaround, not an overnight stay
+
+            yield return new RosterEvent
+            {
+                Id = StableHash($"nightstop_{arrival.Destination}_{arrival.EndTime:O}"),
+                Type = "nightstop",
+                Origin = arrival.Destination,
+                StartTime = arrival.EndTime,
+                EndTime = departure.StartTime,
+                Status = "Interpreted",
+                CreatedAt = DateTime.UtcNow,
+                Description = $"Nightstop {arrival.Destination}"
+            };
+        }
+    }
+
+    private static string GetHomeAirport(IReadOnlyList<RosterEvent> flights)
+    {
+        return flights
+            .SelectMany(f => new[] { f.Origin!, f.Destination! })
+            .GroupBy(a => a)
+            .OrderByDescending(g => g.Count())
+            .First()
+            .Key;
     }
 
     private static string GetDutyType(string summary)
