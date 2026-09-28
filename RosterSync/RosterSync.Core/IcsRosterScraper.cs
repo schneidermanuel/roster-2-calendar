@@ -174,8 +174,8 @@ public class IcsRosterScraper() : IRosterScraper
             return "off";
         if (summary.StartsWith("Standby", StringComparison.OrdinalIgnoreCase))
             return "standby";
-        if (summary.StartsWith("Course", StringComparison.OrdinalIgnoreCase))
-            return "course";
+		if (summary.StartsWith("Abailable for Continuiation", StringComparison.OrdinalIgnoreCase))
+            return "ac";
         if (summary.StartsWith("Krank", StringComparison.OrdinalIgnoreCase))
             return "sick";
 
