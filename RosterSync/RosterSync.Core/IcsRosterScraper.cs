@@ -66,11 +66,6 @@ public class IcsRosterScraper() : IRosterScraper
     {
         var summary = e.Summary?.Trim() ?? string.Empty;
 
-        // Check-in is a separate placeholder duty that always precedes its flight; the flight
-        // event itself carries the real schedule, so check-in doesn't need to be tracked.
-        if (summary.Equals("Check in", StringComparison.OrdinalIgnoreCase))
-            return null;
-
         if (e.Start is null)
             throw new InvalidOperationException($"ICS event {e.Uid} has no DTSTART");
 
