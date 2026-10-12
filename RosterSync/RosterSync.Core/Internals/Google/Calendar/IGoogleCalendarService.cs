@@ -10,7 +10,8 @@ public interface IGoogleCalendarService
     Task<string> CreateEventAsync(Guid userId, Model.Entities.SyncConfig config, SyncedEvent syncedEvent,
         CancellationToken cancellationToken);
 
-    Task UpdateEventAsync(Guid userId, Model.Entities.SyncConfig config, SyncedEvent syncedEvent,
+    /// <summary>Returns the Google event id; differs from the input if the event was gone and got recreated.</summary>
+    Task<string> UpdateEventAsync(Guid userId, Model.Entities.SyncConfig config, SyncedEvent syncedEvent,
         CancellationToken cancellationToken);
 
     Task DeleteEventAsync(Guid userId, Model.Entities.SyncConfig config, string googleEventId,

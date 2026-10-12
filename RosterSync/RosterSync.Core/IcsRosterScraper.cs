@@ -47,7 +47,7 @@ public class IcsRosterScraper() : IRosterScraper
 
             // Unlike the HTML source (which only ever returns today and future events),
             // this feed contains the whole month - trim old events to match.
-            var cutoff = DateTime.UtcNow.Date.AddDays(-1);
+            var cutoff = GetCutoff();
 
             return events
                 .Where(e => e.StartTime.Date >= cutoff)
@@ -59,6 +59,8 @@ public class IcsRosterScraper() : IRosterScraper
             File.Delete(tempFile);
         }
     }
+
+    public static DateTime GetCutoff() => DateTime.UtcNow.Date.AddDays(-1);
 
     private static RosterEvent? ToRosterEvent(CalendarEvent e)
     {

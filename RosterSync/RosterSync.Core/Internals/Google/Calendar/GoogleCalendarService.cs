@@ -1,4 +1,8 @@
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
+using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
@@ -39,26 +43,74 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
         CancellationToken cancellationToken)
     {
         var service = await CreateServiceAsync(userId, cancellationToken);
-        var googleEvent = MapToGoogleEvent(e);
-        var created = await service.Events.Insert(googleEvent, config.GoogleCalendarId).ExecuteAsync(cancellationToken);
-        return created.Id;
+        return await InsertAsync(service, config, e, MapToGoogleEvent(e), cancellationToken);
     }
 
-    public async Task UpdateEventAsync(Guid userId, Model.Entities.SyncConfig config, SyncedEvent e,
+    // Deterministic id makes the insert idempotent: if a previous sync created the event but
+    // failed to persist the id, the retry hits 409 instead of creating a duplicate.
+    // Google event ids allow lowercase a-v and 0-9 (5-1024 chars); hex qualifies.
+    private static string GetDeterministicEventId(Model.Entities.SyncConfig config, SyncedEvent e) =>
+        Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes($"rostersync:{config.Id}:{e.Id}")))
+            .ToLowerInvariant();
+
+    private static async Task<string> InsertAsync(CalendarService service, Model.Entities.SyncConfig config,
+        SyncedEvent e, Event googleEvent, CancellationToken cancellationToken)
+    {
+        googleEvent.Id = GetDeterministicEventId(config, e);
+        try
+        {
+            var created = await service.Events.Insert(googleEvent, config.GoogleCalendarId)
+                .ExecuteAsync(cancellationToken);
+            return created.Id;
+        }
+        catch (GoogleApiException ex) when (ex.HttpStatusCode == HttpStatusCode.Conflict)
+        {
+            // Id already used: event exists, or was deleted (id stays reserved). Overwrite and
+            // un-cancel so it reflects current data.
+            googleEvent.Status = "confirmed";
+            var restored = await service.Events.Update(googleEvent, config.GoogleCalendarId, googleEvent.Id)
+                .ExecuteAsync(cancellationToken);
+            return restored.Id;
+        }
+    }
+
+    public async Task<string> UpdateEventAsync(Guid userId, Model.Entities.SyncConfig config, SyncedEvent e,
         CancellationToken cancellationToken)
     {
         var service = await CreateServiceAsync(userId, cancellationToken);
         var googleEvent = MapToGoogleEvent(e);
-        await service.Events.Update(googleEvent, config.GoogleCalendarId, e.GoogleEventId)
-            .ExecuteAsync(cancellationToken);
+        try
+        {
+            var updated = await service.Events.Update(googleEvent, config.GoogleCalendarId, e.GoogleEventId)
+                .ExecuteAsync(cancellationToken);
+            // Cancelled (deleted) events can still be updated and stay cancelled - recreate.
+            if (updated.Status != "cancelled")
+                return e.GoogleEventId;
+        }
+        catch (GoogleApiException ex) when (IsGone(ex))
+        {
+            // deleted in Google, recreate below
+        }
+
+        return await InsertAsync(service, config, e, googleEvent, cancellationToken);
     }
 
     public async Task DeleteEventAsync(Guid userId, Model.Entities.SyncConfig config, string googleEventId,
         CancellationToken cancellationToken)
     {
         var service = await CreateServiceAsync(userId, cancellationToken);
-        await service.Events.Delete(config.GoogleCalendarId, googleEventId).ExecuteAsync(cancellationToken);
+        try
+        {
+            await service.Events.Delete(config.GoogleCalendarId, googleEventId).ExecuteAsync(cancellationToken);
+        }
+        catch (GoogleApiException ex) when (IsGone(ex))
+        {
+            // already deleted in Google
+        }
     }
+
+    private static bool IsGone(GoogleApiException ex) =>
+        ex.HttpStatusCode is HttpStatusCode.NotFound or HttpStatusCode.Gone;
 
     private static string? GetColor(SyncedEvent e)
     {

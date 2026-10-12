@@ -40,7 +40,12 @@ public class RosterSyncService(
                 return;
             }
 
-            var firstSentEvent = rosterEvents.Min(e => e.StartTime.Date);
+            // HTML feed only returns today+future, so its first event marks where coverage starts.
+            // ICS feed is trimmed at a fixed cutoff instead - using the first event there would
+            // skip Google deletion when all of today's events are removed.
+            var firstSentEvent = config.LinkType == LinkType.Ics
+                ? IcsRosterScraper.GetCutoff()
+                : rosterEvents.Min(e => e.StartTime.Date);
 
             var dbEvents = await db.SyncedEvents
                 .Where(e => e.SyncConfigId == config.Id)
@@ -48,6 +53,21 @@ public class RosterSyncService(
 
             var rosterByKey = rosterEvents.ToDictionary(GetNaturalKey);
             var dbByKey = dbEvents.ToDictionary(GetNaturalKey);
+
+            // An event keeps its RosterEventId (ICS UID) when its time/flight changes, but the
+            // natural key then changes. Re-key such DB rows to the new roster key so they are
+            // updated instead of inserted (unique index on SyncConfigId+RosterEventId).
+            var dbById = dbByKey.Values.GroupBy(e => e.RosterEventId).ToDictionary(g => g.Key, g => g.First());
+            foreach (var (key, rosterEvent) in rosterByKey)
+            {
+                if (dbByKey.ContainsKey(key) || !dbById.TryGetValue(rosterEvent.Id, out var moved))
+                    continue;
+                if (rosterByKey.ContainsKey(GetNaturalKey(moved)))
+                    continue; // old key still present in roster, not a move
+
+                dbByKey.Remove(GetNaturalKey(moved));
+                dbByKey[key] = moved;
+            }
 
             var added = 0;
             var updated = 0;
@@ -82,11 +102,13 @@ public class RosterSyncService(
                             {
                                 existing.GoogleEventId = await calendarService.CreateEventAsync(
                                     config.UserId, config, existing, cancellationToken);
+                                // Persist now so a later failure can't lose the id and re-create.
+                                await db.SaveChangesAsync(cancellationToken);
                             }
                         }
                         else
                         {
-                            await calendarService.UpdateEventAsync(
+                            existing.GoogleEventId = await calendarService.UpdateEventAsync(
                                 config.UserId, config, existing, cancellationToken);
                         }
 
@@ -115,6 +137,7 @@ public class RosterSyncService(
                             config.UserId, config, newEvent, cancellationToken);
 
                         newEvent.GoogleEventId = googleId;
+                        await db.SaveChangesAsync(cancellationToken);
                     }
 
                     added++;
@@ -132,7 +155,7 @@ public class RosterSyncService(
             {
                 if (!rosterByKey.ContainsKey(key))
                 {
-                    if (dbEvent.StartTime >= firstSentEvent)
+                    if (dbEvent.StartTime >= firstSentEvent && !string.IsNullOrEmpty(dbEvent.GoogleEventId))
                     {
                         await calendarService.DeleteEventAsync(
                             config.UserId, config, dbEvent.GoogleEventId, cancellationToken);
