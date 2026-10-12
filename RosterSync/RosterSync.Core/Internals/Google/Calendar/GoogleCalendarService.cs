@@ -124,6 +124,12 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
             return "8";
         }
 
+        // Check-in is part of the flight duty, so it shares the (default) flight color
+        if (IsCheckIn(e))
+        {
+            return null;
+        }
+
         if (e.Type == "duty" || e.Type == "standby" || e.Type == "reserve" || e.Type == "ac")
         {
             return "7";
@@ -135,6 +141,11 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
     private static bool IsE1Flight(SyncedEvent e)
     {
         return Regex.IsMatch(e.Description, "HBJV.");
+    }
+
+    private static bool IsCheckIn(SyncedEvent e)
+    {
+        return e.Description?.StartsWith("Check in", StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private static Event MapToGoogleEvent(SyncedEvent e)
