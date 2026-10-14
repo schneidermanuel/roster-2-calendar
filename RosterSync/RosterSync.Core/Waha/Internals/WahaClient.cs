@@ -28,7 +28,13 @@ public class WahaClient
             text = message
         };
         var content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
-        await _httpClient.PostAsync("/api/sendText", content, cancellationToken);
+        var response = await _httpClient.PostAsync("/api/sendText", content, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync(cancellationToken);
+            throw new HttpRequestException(
+                $"WAHA sendText failed with {(int)response.StatusCode}: {error}");
+        }
     }
 
     private string GetChatId(string number)
