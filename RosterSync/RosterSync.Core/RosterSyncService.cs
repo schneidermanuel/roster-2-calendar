@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RosterSync.Core.Internals.Google.Calendar;
 using RosterSync.Core.Waha.Internals;
 using RosterSync.Model;
@@ -11,7 +12,8 @@ public class RosterSyncService(
     IDbContext db,
     IEnumerable<IRosterScraper> scrapers,
     IGoogleCalendarService calendarService,
-    WahaClient waha)
+    WahaClient waha,
+    ILogger<RosterSyncService> logger)
 {
     public async Task SyncAsync(int configId, CancellationToken cancellationToken)
     {
@@ -27,13 +29,16 @@ public class RosterSyncService(
         };
         db.SyncLogs.Add(log);
         await db.SaveChangesAsync(cancellationToken);
+        logger.LogInformation("Sync {ConfigId} started (link type {LinkType})", config.Id, config.LinkType);
 
         try
         {
             var whatsappNotification = new StringBuilder();
             var rosterEvents = await scraper.ScrapeAsync(config.RosterUrl, cancellationToken);
+            logger.LogInformation("Sync {ConfigId}: scraped {Count} roster events", config.Id, rosterEvents.Count);
             if (!rosterEvents.Any())
             {
+                logger.LogWarning("Sync {ConfigId}: no events found", config.Id);
                 log.FinishedAt = DateTime.UtcNow;
                 log.Status = "No events found";
                 await db.SaveChangesAsync(cancellationToken);
@@ -90,6 +95,8 @@ public class RosterSyncService(
                             rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
                             rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                         {
+                            logger.LogInformation("Sync {ConfigId}: notify change {Key} ({Description})",
+                                config.Id, key, rosterEvent.Description);
                             AppendEventChangedMessage(whatsappNotification, rosterEvent, existing);
                         }
 
@@ -112,6 +119,9 @@ public class RosterSyncService(
                                 config.UserId, config, existing, cancellationToken);
                         }
 
+                        logger.LogInformation(
+                            "Sync {ConfigId}: updated {Key} (dataChanged={DataChanged}, missingGoogleEvent={Missing})",
+                            config.Id, key, dataChanged, missingGoogleEvent);
                         updated++;
                     }
                 }
@@ -141,6 +151,8 @@ public class RosterSyncService(
                     }
 
                     added++;
+                    logger.LogInformation("Sync {ConfigId}: added {Key} ({Description}) at {Start:u}",
+                        config.Id, key, newEvent.Description, newEvent.StartTime);
                     if (newEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
                         newEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                     {
@@ -169,6 +181,8 @@ public class RosterSyncService(
                             $"Event at {dbEvent.StartTime.ToString("dd.MM")} {dbEvent.Description} has been cancelled");
                     }
 
+                    logger.LogInformation("Sync {ConfigId}: deleted {Key} ({Description}) at {Start:u}",
+                        config.Id, key, dbEvent.Description, dbEvent.StartTime);
                     deleted++;
                 }
             }
@@ -180,9 +194,17 @@ public class RosterSyncService(
             log.EventsDeleted = deleted;
 
             await db.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("Sync {ConfigId} finished: added={Added} updated={Updated} deleted={Deleted}",
+                config.Id, added, updated, deleted);
             var whatsapp = whatsappNotification.ToString();
+            if (string.IsNullOrWhiteSpace(whatsapp))
+                logger.LogInformation("Sync {ConfigId}: no WhatsApp-relevant changes", config.Id);
+            else if (string.IsNullOrEmpty(config.PhoneNumber))
+                logger.LogWarning("Sync {ConfigId}: WhatsApp message pending but no phone number configured",
+                    config.Id);
             if (!string.IsNullOrWhiteSpace(whatsapp) && !string.IsNullOrEmpty(config.PhoneNumber))
             {
+                logger.LogInformation("Sync {ConfigId}: sending WhatsApp message:\n{Message}", config.Id, whatsapp);
                 await waha.SendMessage(config.PhoneNumber!,
                     $"You have new duty changes. Please review now\n\n{whatsapp}",
                     cancellationToken);
@@ -190,6 +212,7 @@ public class RosterSyncService(
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Sync {ConfigId} failed", config.Id);
             log.Status = "Failed";
             log.FinishedAt = DateTime.UtcNow;
             log.ErrorMessage = ex.Message;
