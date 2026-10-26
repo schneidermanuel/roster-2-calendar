@@ -91,7 +91,7 @@ public class RosterSyncService(
 
                     if (dataChanged || missingGoogleEvent)
                     {
-                        if (dataChanged &&
+                        if (HasNotifiableChange(existing, rosterEvent) &&
                             rosterEvent.StartTime.Date <= DateTime.Today.AddDays(1) &&
                             rosterEvent.StartTime.ToUniversalTime() > DateTime.UtcNow)
                         {
@@ -283,9 +283,18 @@ public class RosterSyncService(
         _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
     };
 
-    private static bool HasChanged(SyncedEvent db, RosterEvent roster) =>
-        db.StartTime != roster.StartTime ||
-        db.EndTime != roster.EndTime ||
+    private static bool IgnoresTimeChanges(RosterEvent e) =>
+        e.Type.Equals("flight", StringComparison.OrdinalIgnoreCase) ||
+        e.Type.Equals("nightstop", StringComparison.OrdinalIgnoreCase);
+
+    // Time shifts of flights/nightstops are only delay forecasts (a real change comes with a new
+    // flight number): they must be synced to Google, but are not worth a notification.
+    private static bool HasNotifiableChange(SyncedEvent db, RosterEvent roster) =>
+        HasChanged(db, roster) &&
+        (!IgnoresTimeChanges(roster) || HasChanged(db, roster, ignoreTimes: true));
+
+    private static bool HasChanged(SyncedEvent db, RosterEvent roster, bool ignoreTimes = false) =>
+        (!ignoreTimes && (db.StartTime != roster.StartTime || db.EndTime != roster.EndTime)) ||
         db.Status != roster.Status ||
         db.FlightNumber != roster.FlightNumber ||
         db.Origin != roster.Origin ||
