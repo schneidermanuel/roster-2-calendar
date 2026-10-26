@@ -64,8 +64,6 @@ public class IcsRosterScraper() : IRosterScraper
 
     private static RosterEvent? ToRosterEvent(CalendarEvent e)
     {
-        var summary = e.Summary?.Trim() ?? string.Empty;
-
         if (e.Start is null)
             throw new InvalidOperationException($"ICS event {e.Uid} has no DTSTART");
 
@@ -73,9 +71,18 @@ public class IcsRosterScraper() : IRosterScraper
         var end = e.End is null ? start : ToUtc(e.End);
         var status = e.Status ?? "CONFIRMED";
         var createdAt = e.Created is null ? DateTime.UtcNow : ToUtc(e.Created);
-        var id = StableHash(e.Uid ?? $"{summary}_{start:O}");
+        var summary = e.Summary?.Trim() ?? string.Empty;
 
-        var flightMatch = FlightSummaryRegex.Match(summary);
+        // Shortly before departure the description changes from "DEP: x // ARR: y" to
+        // "SCHEDULE: a // DEP: x // ARR: y". With more than two segments drop the first one.
+        var parts = (e.Description ?? string.Empty).Split("//").Select(p => p.Trim()).ToArray();
+        var description = string.Join(' ', parts.Length > 2 ? parts.Skip(1) : parts);
+
+        var flightMatch = FlightSummaryRegex.Match(description);
+        if (!flightMatch.Success)
+            flightMatch = FlightSummaryRegex.Match(summary);
+
+        var id = StableHash(e.Uid ?? $"{summary}_{start:O}");
         if (flightMatch.Success)
         {
             return new RosterEvent
@@ -90,7 +97,8 @@ public class IcsRosterScraper() : IRosterScraper
                 EndTime = end,
                 Status = status,
                 CreatedAt = createdAt,
-                Description = summary
+                Description = $"{flightMatch.Groups["flight"].Value} {flightMatch.Groups["origin"].Value}-{flightMatch.Groups["destination"].Value}" +
+                              (flightMatch.Groups["aircraft"].Success ? $", {flightMatch.Groups["aircraft"].Value.Trim()}" : "")
             };
         }
 
@@ -171,7 +179,7 @@ public class IcsRosterScraper() : IRosterScraper
             return "off";
         if (summary.StartsWith("Standby", StringComparison.OrdinalIgnoreCase))
             return "standby";
-		if (summary.StartsWith("Abailable for Continuiation", StringComparison.OrdinalIgnoreCase))
+        if (summary.StartsWith("Abailable for Continuiation", StringComparison.OrdinalIgnoreCase))
             return "ac";
         if (summary.StartsWith("Krank", StringComparison.OrdinalIgnoreCase))
             return "sick";
