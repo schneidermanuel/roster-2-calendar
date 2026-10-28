@@ -56,7 +56,8 @@ public class RosterSyncService(
                 .Where(e => e.SyncConfigId == config.Id)
                 .ToListAsync(cancellationToken);
 
-            var rosterByKey = rosterEvents.ToDictionary(GetNaturalKey);
+            // Exact duplicates (same key) would otherwise make ToDictionary throw.
+            var rosterByKey = rosterEvents.DistinctBy(GetNaturalKey).ToDictionary(GetNaturalKey);
             var dbByKey = dbEvents.ToDictionary(GetNaturalKey);
 
             // An event keeps its RosterEventId (ICS UID) when its time/flight changes, but the
@@ -273,14 +274,15 @@ public class RosterSyncService(
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
+        // Several duties can start at the same time - the title tells them apart.
+        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}_{e.Description}"
     };
 
     private static string GetNaturalKey(SyncedEvent e) => e.Type.ToLowerInvariant() switch
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
-        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}"
+        _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}_{e.Description}"
     };
 
     private static bool IgnoresTimeChanges(RosterEvent e) =>
