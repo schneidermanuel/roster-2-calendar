@@ -274,6 +274,7 @@ public class RosterSyncService(
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
+        "aircraftchange" => $"aircraftchange_{e.Origin}_{e.StartTime:yyyyMMdd}",
         // Several duties can start at the same time - the title tells them apart.
         _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}_{e.Description}"
     };
@@ -282,12 +283,14 @@ public class RosterSyncService(
     {
         "flight" => $"flight_{e.FlightNumber}_{e.StartTime:yyyyMMdd}",
         "nightstop" => $"nightstop_{e.Origin}_{e.StartTime:yyyyMMdd}",
+        "aircraftchange" => $"aircraftchange_{e.Origin}_{e.StartTime:yyyyMMdd}",
         _ => $"{e.Type}_{e.StartTime:yyyyMMddHHmm}_{e.Description}"
     };
 
     private static bool IgnoresTimeChanges(RosterEvent e) =>
         e.Type.Equals("flight", StringComparison.OrdinalIgnoreCase) ||
-        e.Type.Equals("nightstop", StringComparison.OrdinalIgnoreCase);
+        e.Type.Equals("nightstop", StringComparison.OrdinalIgnoreCase) ||
+        e.Type.Equals("aircraftchange", StringComparison.OrdinalIgnoreCase);
 
     // Time shifts of flights/nightstops are only delay forecasts (a real change comes with a new
     // flight number): they must be synced to Google, but are not worth a notification.

@@ -44,6 +44,7 @@ public class IcsRosterScraper() : IRosterScraper
                 .ToList();
 
             events.AddRange(GetNightstops(events));
+            events.AddRange(GetAircraftChanges(events));
 
             // Unlike the HTML source (which only ever returns today and future events),
             // this feed contains the whole month - trim old events to match.
@@ -151,6 +152,47 @@ public class IcsRosterScraper() : IRosterScraper
                 Status = "Interpreted",
                 CreatedAt = DateTime.UtcNow,
                 Description = $"Nightstop {arrival.Destination}"
+            };
+        }
+    }
+
+    private static readonly TimeSpan MaximumAircraftChangeGap = TimeSpan.FromHours(2);
+
+    // An aircraft change is inferred when, on the same day, the next flight departs at most
+    // 2 hours after the previous one landed and is operated by a different aircraft.
+    private static IEnumerable<RosterEvent> GetAircraftChanges(IReadOnlyList<RosterEvent> events)
+    {
+        var flights = events
+            .Where(e => e.Type == "flight")
+            .OrderBy(e => e.StartTime)
+            .ToList();
+
+        for (var i = 0; i < flights.Count - 1; i++)
+        {
+            var arrival = flights[i];
+            var departure = flights[i + 1];
+
+            if (arrival.Aircraft is null || departure.Aircraft is null)
+                continue;
+            if (arrival.Aircraft == departure.Aircraft)
+                continue;
+            if (arrival.EndTime.Date != departure.StartTime.Date)
+                continue;
+
+            var gap = departure.StartTime - arrival.EndTime;
+            if (gap < TimeSpan.Zero || gap > MaximumAircraftChangeGap)
+                continue;
+
+            yield return new RosterEvent
+            {
+                Id = StableHash($"aircraftchange_{arrival.Destination}_{arrival.EndTime:O}"),
+                Type = "aircraftchange",
+                Origin = arrival.Destination,
+                StartTime = arrival.EndTime,
+                EndTime = departure.StartTime,
+                Status = "Interpreted",
+                CreatedAt = DateTime.UtcNow,
+                Description = $"Aircraft-Change {arrival.Aircraft} → {departure.Aircraft}"
             };
         }
     }

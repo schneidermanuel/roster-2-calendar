@@ -119,6 +119,11 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
             return "4";
         }
 
+        if (e.Type == "aircraftchange")
+        {
+            return "11"; // Tomato (red)
+        }
+
         if (e.Type == "off")
         {
             return "8";
@@ -203,6 +208,7 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
     {
         "flight" => $"{e.FlightNumber} {e.Origin}→{e.Destination}",
         "nightstop" => $"Nightstop {e.Origin}",
+        "aircraftchange" => $"Aircraft-Change {e.Origin}",
         "off" => "OFF",
         _ => e.Description ?? e.Type
     };
