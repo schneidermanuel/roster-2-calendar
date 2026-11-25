@@ -163,11 +163,7 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
                 Description = e.Description,
                 Start = new EventDateTime { Date = e.StartTime.ToString("yyyy-MM-dd") },
                 End = new EventDateTime { Date = e.EndTime.ToString("yyyy-MM-dd") },
-                Reminders = new Event.RemindersData
-                {
-                    UseDefault = false,
-                    Overrides = GetReminders(e)
-                },
+                Reminders = new Event.RemindersData { UseDefault = false },
                 ColorId = GetColor(e)
             };
         }
@@ -176,32 +172,11 @@ public class GoogleCalendarService(ITokenRefreshService tokenRefresh) : IGoogleC
         {
             Summary = GetTitle(e),
             Description = e.Description,
-            Reminders = new Event.RemindersData
-            {
-                UseDefault = false,
-                Overrides = GetReminders(e)
-            },
+            Reminders = new Event.RemindersData { UseDefault = false },
             Start = new EventDateTime { DateTimeDateTimeOffset = e.StartTime, TimeZone = "UTC" },
             End = new EventDateTime { DateTimeDateTimeOffset = e.EndTime, TimeZone = "UTC" },
             ColorId = GetColor(e)
         };
-    }
-
-    private static IList<EventReminder> GetReminders(SyncedEvent e)
-    {
-        if (IsE1Flight(e))
-        {
-            return
-            [
-                new EventReminder
-                {
-                    Method = "popup",
-                    Minutes = 24 * 60
-                }
-            ];
-        }
-
-        return [];
     }
 
     private static string GetTitle(SyncedEvent e) => e.Type.ToLowerInvariant() switch
